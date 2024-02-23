@@ -1,0 +1,30 @@
+DEFINE_UI_PARAMS(blackPoint, Black Level, DCTLUI_SLIDER_FLOAT, 0.0, 0.0, 100.0, 1.0)
+DEFINE_UI_PARAMS(whitePoint, White Level, DCTLUI_SLIDER_FLOAT, 100.0, 0.0, 100.0, 1.0)
+DEFINE_UI_PARAMS(stepCount, Steps of dynamic Range, DCTLUI_SLIDER_FLOAT, 15.0, 2.0, 20.0, 1.0)
+
+__DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B)
+{
+    int p_Size = p_Width;
+
+    if (p_Y < p_Height / 2) {
+        // Upper Half: stepCount Steps from Black to White
+        int numSteps = int(stepCount);
+        int stepSize = p_Size / numSteps;
+        int currentStep = p_X / stepSize;
+
+        float value = (float)currentStep / (float)(numSteps - 1); // Adjusted to make the last step pure white
+        float range = whitePoint - blackPoint;
+
+        p_R = (value * range + blackPoint) / 100.0f;
+        p_G = (value * range + blackPoint) / 100.0f;
+        p_B = (value * range + blackPoint) / 100.0f;
+    } else {
+        // Lower Half: Gradient from Black to White
+        float gradient = (float)p_X / (float)p_Size;
+        p_R = (gradient * (whitePoint - blackPoint) + blackPoint) / 100.0f;
+        p_G = (gradient * (whitePoint - blackPoint) + blackPoint) / 100.0f;
+        p_B = (gradient * (whitePoint - blackPoint) + blackPoint) / 100.0f;
+    }
+
+    return make_float3(p_R, p_G, p_B);
+}

@@ -1,0 +1,125 @@
+DEFINE_UI_PARAMS(hueStart, Hue Start, DCTLUI_SLIDER_FLOAT, 0.0, 0.0, 1.0, 0.01)
+DEFINE_UI_PARAMS(hueEnd, Hue End, DCTLUI_SLIDER_FLOAT, 1.0, 0.0, 1.0, 0.01)
+DEFINE_UI_PARAMS(saturationAdjustment, Log Saturation, DCTLUI_SLIDER_FLOAT, 1.0, 0.0, 5.0, 0.1)
+DEFINE_UI_PARAMS(logAdjustment, Log Shoulder, DCTLUI_SLIDER_FLOAT, 10.0, 1.0, 50.0, 1.0)
+DEFINE_UI_PARAMS(logOffset, Log Offset, DCTLUI_SLIDER_FLOAT, 1.0, 0.0, 1.0, 0.1)
+DEFINE_UI_PARAMS(opt, Channel Option, DCTLUI_COMBO_BOX, 0, { ALL, RED, GREEN, BLUE }, { All Channels, Channel Red, Channel Green, Channel Blue })
+DEFINE_UI_PARAMS(showCurve, Show Curve, DCTLUI_CHECK_BOX, 1)
+
+__DEVICE__ float hueToRgb(float p, float q, float t)
+{
+    if (t < 0.0f) t += 1.0f;
+    if (t > 1.0f) t -= 1.0f;
+    if (t < 1.0f / 6.0f) return p + (q - p) * 6.0f * t;
+    if (t < 1.0f / 2.0f) return q;
+    if (t < 2.0f / 3.0f) return p + (q - p) * (2.0f / 3.0f - t) * 6.0f;
+    return p;
+}
+
+__DEVICE__ float3 hslToRgb(float3 hsl)
+{
+    float hue = hsl.x;
+    float saturation = hsl.y;
+    float lightness = hsl.z;
+
+    if (saturation == 0.0f)
+        return make_float3(lightness, lightness, lightness);
+
+    float q = lightness < 0.5f ? lightness * (1.0f + saturation) : lightness + saturation - lightness * saturation;
+    float p = 2.0f * lightness - q;
+
+    float r = hueToRgb(p, q, hue + 1.0f / 3.0f);
+    float g = hueToRgb(p, q, hue);
+    float b = hueToRgb(p, q, hue - 1.0f / 3.0f);
+
+    return make_float3(r, g, b);
+}
+
+__DEVICE__ float3 rgbToHsl(float3 rgb)
+{
+    float r = rgb.r;
+    float g = rgb.g;
+    float b = rgb.b;
+
+    float maxVal = (r > g) ? ((r > b) ? r : b) : ((g > b) ? g : b);
+    float minVal = (r < g) ? ((r < b) ? r : b) : ((g < b) ? g : b);
+
+    float h, s, l;
+    h = s = l = 0.0f;
+
+    l = (maxVal + minVal) * 0.5f;
+
+    if (maxVal == minVal)
+    {
+        h = s = 0.0f; // achromatic case
+    }
+    else
+    {
+        float d = maxVal - minVal;
+        s = l > 0.5f ? d / (2.0f - maxVal - minVal) : d / (maxVal + minVal);
+
+        if (maxVal == r)
+            h = (g - b) / d + (g < b ? 6.0f : 0.0f);
+        else if (maxVal == g)
+            h = (b - r) / d + 2.0f;
+        else if (maxVal == b)
+            h = (r - g) / d + 4.0f;
+
+        h /= 6.0f;
+    }
+
+    return make_float3(h, s, l);
+}
+
+
+__DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B)
+{
+    float3 hsl = rgbToHsl(make_float3(p_R, p_G, p_B));
+    float saturationprev = hsl.y;
+    float saturation, logsaturation, satchange;
+    float aspectRatio = (float)p_Height/(float)p_Width;
+
+    if ((opt == ALL) || (opt == RED) || (opt == GREEN) || (opt == BLUE))
+    {
+        float hue = hsl.x;
+        if ((hue >= hueStart) && (hue <= hueEnd))
+        {
+            saturation = hsl.y * saturationAdjustment;
+            logsaturation = _fmaxf((1.0f - (1.0f - saturation) / logAdjustment) - (1 - logOffset), 0.0f);
+            hsl.y = _fminf(logsaturation, saturation);
+        }
+    }
+
+    satchange = 2.0f - (1.0f - p_Y * saturationAdjustment/10 / logAdjustment);
+    
+
+    p_R = ((opt == ALL) || (opt == RED))   ? hslToRgb(hsl).r : p_R;
+    p_G = ((opt == ALL) || (opt == GREEN)) ? hslToRgb(hsl).g : p_G;
+    p_B = ((opt == ALL) || (opt == BLUE))  ? hslToRgb(hsl).b : p_B;
+
+    if (showCurve) {
+        //logOffset
+        if (p_Y <= p_Height * (1 - logOffset) + 10 && p_Y > (p_Height * (1 - logOffset)))
+        {
+            return make_float3(1.0f, 1.0f, 1.0f);
+        } 
+        //logAdjustment
+        else if (p_X <= p_Width * logAdjustment/50 && p_X > (p_Width * logAdjustment/50 - 10))
+        {
+            return make_float3(1.0f, 1.0f, 1.0f);
+        } 
+        //Saturation
+        else if (-p_Y <= p_X  * aspectRatio * satchange * logOffset - p_Height && -p_Y > p_X * aspectRatio * satchange * logOffset - p_Height - 20)
+        {
+            return make_float3(1.0f, 1.0f, 1.0f);
+        }
+        {
+            return make_float3(p_R, p_G, p_B);
+        }
+    } else {
+        return make_float3(p_R, p_G, p_B);
+    }
+
+
+    
+}

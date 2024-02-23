@@ -1,0 +1,64 @@
+DEFINE_UI_PARAMS(format, Format, DCTLUI_COMBO_BOX, 5, { TIKTOK, INSTA, SQUARE, ACADEMY, IMAX, HDTV, FLAT, NETFLIX, CINEMASCOPE, SCOPE }, { Tik Tok (0.5625), Instagram (0.8), Square (1.0), Academy (1.375), iMax (1.43), HDTV (1.778), Flat (1.85), Netflix (2.0), CinemaScope (2.35), Scope (2.39) })
+DEFINE_UI_PARAMS(blend, Animate Letterbox, DCTLUI_SLIDER_FLOAT, 1.0, 0.0, 1.0, 0.01)
+
+__DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B)
+{
+    float aspectRatio = 1.0f;
+    float targetAspectRatio = 1.0f;
+
+	if (format == TIKTOK) { 
+		targetAspectRatio = 0.5625f;
+	} else if (format == INSTA) { 
+		targetAspectRatio = 0.8f;
+	} else if (format == SQUARE) { 
+		targetAspectRatio = 1.0f;
+	} else if (format == ACADEMY) { 
+		targetAspectRatio = 1.375f;
+	} else if (format == IMAX) { 
+		targetAspectRatio = 1.43f;
+	} else if (format == HDTV) { 
+		targetAspectRatio = 1.778f;
+	} else if (format == FLAT) {
+		targetAspectRatio = 1.85f;
+	} else if (format == NETFLIX) {
+		targetAspectRatio = 2.0f;
+	} else if (format == CINEMASCOPE) {
+		targetAspectRatio = 2.35f;
+	} else if (format == SCOPE) {
+		targetAspectRatio = 2.39f;
+	}
+
+	aspectRatio = (float)p_Width / (float)p_Height;
+
+    if (targetAspectRatio > aspectRatio) {
+        // Calculate the letterbox size
+        int targetHeight = p_Height * (1 - blend) + blend * _round(p_Width / targetAspectRatio);
+        int letterboxSize = (p_Height - targetHeight) / 2;
+
+        // Check if the current pixel is within the letterbox area
+        if (p_Y < letterboxSize || p_Y >= (letterboxSize + targetHeight)) {
+            // Pixel is in the letterbox area, set it to black
+            p_R = 0.0f;
+            p_G = 0.0f;
+            p_B = 0.0f;
+        } else {
+            // Pixel is within the content area, perform the original transformation
+        }
+    } else {
+        // Calculate the letterbox size
+        int targetWidth = p_Width * (1 - blend) + blend * _round(p_Height * (targetAspectRatio));
+        int letterboxSize = (p_Width - targetWidth) / 2;
+
+        // Check if the current pixel is within the letterbox area
+        if (p_X < (letterboxSize) || p_X >= (letterboxSize + targetWidth)) {
+            // Pixel is in the letterbox area, set it to black
+            p_R = 0.0f;
+            p_G = 0.0f;
+            p_B = 0.0f;
+        } else {
+            // Pixel is within the content area, perform the original transformation
+        }
+    }
+
+    return make_float3(p_R, p_G, p_B);
+}
