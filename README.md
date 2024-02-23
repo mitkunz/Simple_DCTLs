@@ -8,8 +8,9 @@ Feel free to check out these DCTLs I made specifically for everyday color gradin
 
 This Saturation DCTL enables you to easily achieve rich levels of saturation without worrying about any color clipping in any channel. Thanks to its logarithmic curve, this awesome tool retains all the intricate details, giving your images a stunning, film-like appearance with intense and vibrant saturation. Also you get an overlay to see your changes based on a curve function.
 
-![dctl_sat_curves](https://github.com/mitkunz/Simple_DCTLs/assets/143692878/351171e6-eb64-4fe7-a326-f1b81ffa8d95)
-![dctl_sat_settings](https://github.com/mitkunz/Simple_DCTLs/assets/143692878/d8197445-11db-4489-9a7b-a2f233b609d6)
+Curve Overlay             |  Settings Panel
+:-------------------------:|:-------------------------:
+![dctl_sat_curves](https://github.com/mitkunz/Simple_DCTLs/assets/143692878/351171e6-eb64-4fe7-a326-f1b81ffa8d95)  |  ![dctl_sat_settings](https://github.com/mitkunz/Simple_DCTLs/assets/143692878/d8197445-11db-4489-9a7b-a2f233b609d6)
 
 
 ## Adjustable Grey Card
