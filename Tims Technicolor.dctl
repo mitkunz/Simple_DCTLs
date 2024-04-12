@@ -1,0 +1,41 @@
+DEFINE_UI_PARAMS(adjLevelR, Red > Green+Blue, DCTLUI_SLIDER_FLOAT, 0.3333, 0.0, 1.0, 0.0001)
+DEFINE_UI_PARAMS(adjLevelG, Green > Red+Blue, DCTLUI_SLIDER_FLOAT, 0.3333, 0.0, 1.0, 0.0001)
+DEFINE_UI_PARAMS(adjLevelB, Blue > Red+Green, DCTLUI_SLIDER_FLOAT, 0.3333, 0.0, 1.0, 0.0001)
+DEFINE_UI_PARAMS(noClip, Preserve Clipping, DCTLUI_CHECK_BOX, 1) 
+
+__DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B)
+{
+    // Level anpassen
+    float levelR = p_R * adjLevelR;
+    float levelG = p_G * adjLevelG;
+    float levelB = p_B * adjLevelB;
+
+    // Matrix
+    float newR = p_R - levelG + levelB;
+    float newG = p_G - levelR + levelB;
+    float newB = p_B - levelR + levelG;
+
+    // Optional: Clipping eleminieren
+    if (noClip == 1) {
+        const float threshold_low = 0.01f;
+        const float threshold_high = 0.9f;
+
+        // Logarithmische Annäherung an 1
+        if (newR >= threshold_high)
+            newR = threshold_high + (1.0f - threshold_high) * _logf(1.0f + (newR - threshold_high) / (1.0f - threshold_high)) * 0.5f;
+        if (newG >= threshold_high)
+            newG = threshold_high + (1.0f - threshold_high) * _logf(1.0f + (newG - threshold_high) / (1.0f - threshold_high)) * 0.5f;
+        if (newB >= threshold_high)
+            newB = threshold_high + (1.0f - threshold_high) * _logf(1.0f + (newB - threshold_high) / (1.0f - threshold_high)) * 0.5f;
+
+        // Logarithmische Annäherung an 0 (invertiert)
+        if (newR <= threshold_low)
+            newR = threshold_low - (1.0f - threshold_low) * _logf(1.0f + (threshold_low - newR) / threshold_low) * 0.005f;
+        if (newG <= threshold_low)
+            newG = threshold_low - (1.0f - threshold_low) * _logf(1.0f + (threshold_low - newG) / threshold_low) * 0.005f;
+        if (newB <= threshold_low)
+            newB = threshold_low - (1.0f - threshold_low) * _logf(1.0f + (threshold_low - newB) / threshold_low) * 0.005f;
+    }
+
+    return make_float3(newR, newG, newB);
+}
