@@ -1,10 +1,6 @@
-DEFINE_UI_PARAMS(hueStart, Hue Start, DCTLUI_SLIDER_FLOAT, 0.0, 0.0, 1.0, 0.01)
-DEFINE_UI_PARAMS(hueEnd, Hue End, DCTLUI_SLIDER_FLOAT, 1.0, 0.0, 1.0, 0.01)
 DEFINE_UI_PARAMS(saturationAdjustment, Log Saturation, DCTLUI_SLIDER_FLOAT, 1.0, 0.0, 5.0, 0.1)
-DEFINE_UI_PARAMS(logAdjustment, Log Shoulder, DCTLUI_SLIDER_FLOAT, 10.0, 1.0, 50.0, 1.0)
 DEFINE_UI_PARAMS(logOffset, Log Offset, DCTLUI_SLIDER_FLOAT, 1.0, 0.0, 1.0, 0.1)
 DEFINE_UI_PARAMS(opt, Channel Option, DCTLUI_COMBO_BOX, 0, { ALL, RED, GREEN, BLUE }, { All Channels, Channel Red, Channel Green, Channel Blue })
-DEFINE_UI_PARAMS(showCurve, Show Curve, DCTLUI_CHECK_BOX, 1)
 
 __DEVICE__ float hueToRgb(float p, float q, float t)
 {
@@ -76,50 +72,24 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
 {
     float3 hsl = rgbToHsl(make_float3(p_R, p_G, p_B));
     float saturationprev = hsl.y;
-    float saturation, logsaturation, satchange;
-    float aspectRatio = (float)p_Height/(float)p_Width;
+    float saturation, logsaturation;
 
     if ((opt == ALL) || (opt == RED) || (opt == GREEN) || (opt == BLUE))
     {
-        float hue = hsl.x;
-        if ((hue >= hueStart) && (hue <= hueEnd))
-        {
-            saturation = hsl.y * saturationAdjustment;
-            logsaturation = _fmaxf((1.0f - (1.0f - saturation) / logAdjustment) - (1 - logOffset), 0.0f);
-            hsl.y = _fminf(logsaturation, saturation);
-        }
-    }
+        saturation = hsl.y * saturationAdjustment;
 
-    satchange = 2.0f - (1.0f - p_Y * saturationAdjustment/10 / logAdjustment);
-    
+        const float threshold_low = 0.1f;
+        const float threshold_high = 0.9f;
+        if (saturation >= threshold_high)
+            saturation = threshold_high + (1.0f - threshold_high) * _logf(1.0f + (saturation - threshold_high) / (1.0f - threshold_high)) * 0.5f;
+        if (saturation <= threshold_low)
+            saturation = threshold_low - (1.0f - threshold_low) * _logf(1.0f + (threshold_low - saturation) / threshold_low) * 0.005f;
+        hsl.y = saturation * logOffset;
+    }
 
     p_R = ((opt == ALL) || (opt == RED))   ? hslToRgb(hsl).r : p_R;
     p_G = ((opt == ALL) || (opt == GREEN)) ? hslToRgb(hsl).g : p_G;
     p_B = ((opt == ALL) || (opt == BLUE))  ? hslToRgb(hsl).b : p_B;
-
-    if (showCurve) {
-        //logOffset
-        if (p_Y <= p_Height * (1 - logOffset) + 10 && p_Y > (p_Height * (1 - logOffset)))
-        {
-            return make_float3(1.0f, 1.0f, 1.0f);
-        } 
-        //logAdjustment
-        else if (p_X <= p_Width * logAdjustment/50 && p_X > (p_Width * logAdjustment/50 - 10))
-        {
-            return make_float3(1.0f, 1.0f, 1.0f);
-        } 
-        //Saturation
-        else if (-p_Y <= p_X  * aspectRatio * satchange * logOffset - p_Height && -p_Y > p_X * aspectRatio * satchange * logOffset - p_Height - 20)
-        {
-            return make_float3(1.0f, 1.0f, 1.0f);
-        }
-        {
-            return make_float3(p_R, p_G, p_B);
-        }
-    } else {
-        return make_float3(p_R, p_G, p_B);
-    }
-
-
     
+    return make_float3(p_R, p_G, p_B);
 }
