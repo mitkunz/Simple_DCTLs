@@ -15,11 +15,11 @@ Example             |  Settings Panel
 
 ## Film Saturation Emulation
 
-This Saturation DCTL enables you to easily achieve rich levels of saturation without worrying about any color clipping in any channel. Also you get an overlay to see your changes based on a curve function.
+This Saturation DCTL enables you to easily achieve rich levels of saturation without worrying about any color clipping in any channel. A logarithmic rolloff function compresses high saturation areas.
 
 Example             |  Settings Panel
 :-------------------------:|:-------------------------:
-![dctl_sat_example](https://github.com/mitkunz/Simple_DCTLs/assets/143692878/82ca2dbd-6b2d-44aa-a31e-feed7fab33e4)  |  ![dctl_sat_settings](https://github.com/mitkunz/Simple_DCTLs/assets/143692878/d8197445-11db-4489-9a7b-a2f233b609d6)
+![dctl_sat_example](https://github.com/mitkunz/Simple_DCTLs/assets/143692878/2f0f4de6-7c4e-4ba4-a24d-84ef9315d2dc)  |  ![dctl_sat_settings](https://github.com/mitkunz/Simple_DCTLs/assets/143692878/f99a52ba-e8b9-432d-bbb9-4ef074522d34)
 
 
 ## Adjustable Grey Card
