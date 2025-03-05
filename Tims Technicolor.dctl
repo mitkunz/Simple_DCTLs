@@ -2,6 +2,7 @@ DEFINE_UI_PARAMS(adjLevelR, Red > Green+Blue, DCTLUI_SLIDER_FLOAT, 0.3333, 0.0, 
 DEFINE_UI_PARAMS(adjLevelG, Green > Red+Blue, DCTLUI_SLIDER_FLOAT, 0.3333, 0.0, 1.0, 0.0001)
 DEFINE_UI_PARAMS(adjLevelB, Blue > Red+Green, DCTLUI_SLIDER_FLOAT, 0.3333, 0.0, 1.0, 0.0001)
 DEFINE_UI_PARAMS(noClip, Preserve Clipping, DCTLUI_CHECK_BOX, 1) 
+DEFINE_UI_PARAMS(colorspace, Color Space, DCTLUI_COMBO_BOX, 0, { REC709, ACES}, { Rec709, ACES CCT })
 
 __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B)
 {
@@ -17,8 +18,14 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
 
     // Optional: Clipping eleminieren
     if (noClip == 1) {
-        const float threshold_low = 0.01f;
-        const float threshold_high = 0.9f;
+        float threshold_low, threshold_high;
+        if (colorspace==0) {
+            threshold_low = 0.01f;
+            threshold_high = 0.9f;
+        } else if (colorspace=1) {
+            threshold_low = 0.11f;
+            threshold_high = 0.7f;
+        }
 
         // Logarithmische Annäherung an 1
         if (newR >= threshold_high)
