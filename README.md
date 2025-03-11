@@ -6,7 +6,8 @@ Feel free to check out these DCTLs I made specifically for everyday color gradin
 ## Technicolor Emulation
 
 A little DCTL that simulates the Technicolor look. You can fine-tune the RGB Mix values and also enable a logarithmic rolloff function to eliminate clipping. 
-The basic RGB mix idea is an adapted version of the PowerGrade implementation by [JanikBrosFilms](https://www.youtube.com/watch?v=kXNRtrK3Lx8), which is further improved with anti-clipping functionality.
+The basic RGB mix idea is an adapted version of the PowerGrade implementation by [Tim Yemmax
+](https://www.youtube.com/watch?v=NlvvBf9UcOk) and [JanikBrosFilms](https://www.youtube.com/watch?v=kXNRtrK3Lx8), which is further improved with anti-clipping functionality.
 
 Example             |  Settings Panel
 :-------------------------:|:-------------------------:
